@@ -4,6 +4,23 @@ const db = require('../db')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken');
 
+
+const generateTokens = (user) => {
+  const access_token = jwt.sign(
+    { email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '1s' }
+  );
+
+  const refresh_token = jwt.sign(
+    { email: user.email },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: '1d' }
+  );
+
+  return {access_token, refresh_token}
+}
+
 router.post('/register', async (req, res) => {
   const {email, password} = req.body
   try {
@@ -35,18 +52,28 @@ router.post('/login', async (req, res) => {
     if (!passwordMatch) {
       return res.status(403).send("Invalid password")
     }
-    const token = jwt.sign(
-      { email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
+    const {access_token, refresh_token} = generateTokens(user)
 
-    console.log(token)
-    return res.json({token})
+    return res.json({access_token, refresh_token})
   } catch (err) {
     console.log(err)
     return res.status(500).send('Database query failed')
   }
+})
+
+router.post('/refresh', async (req, res) => {
+  const refreshToken = req.body.token
+  if (!refreshToken) {
+    return res.status(401).send('refresh token required')
+  }
+  jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
+    if (err) {
+      console.log(err)
+      return res.sendStatus(403); // Forbidden
+    }
+    const {access_token, refresh_token} = generateTokens(user)
+    return res.json({access_token, refresh_token})
+  });
 })
 
 module.exports = router;
