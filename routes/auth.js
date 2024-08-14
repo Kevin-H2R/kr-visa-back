@@ -9,7 +9,7 @@ const generateTokens = (user) => {
   const access_token = jwt.sign(
     { email: user.email },
     process.env.JWT_SECRET,
-    { expiresIn: '1s' }
+    { expiresIn: '1h' }
   );
 
   const refresh_token = jwt.sign(
@@ -24,7 +24,7 @@ const generateTokens = (user) => {
 router.post('/register', async (req, res) => {
   const {email, password} = req.body
   try {
-    const [results] = await db.query("SELECT email FROM users")
+    const [results] = await db.query("SELECT email FROM user")
     console.log(results)
     for (let i = 0; i < results.length; ++i) {
       if (results[i].email === email) {
@@ -32,7 +32,7 @@ router.post('/register', async (req, res) => {
       }
     }
     const hashed = await bcrypt.hash(password, 10)
-    db.query('INSERT INTO users (email, password) VALUES (?, ?)', [email, hashed])
+    db.query('INSERT INTO user (email, password) VALUES (?, ?)', [email, hashed])
   } catch (err) {
     console.log(err)
     return res.status(500).send('Database query failed');
@@ -43,7 +43,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    const [results] = await db.query('SELECT * FROM users WHERE email = ?', [email])
+    const [results] = await db.query('SELECT * FROM user WHERE email = ?', [email])
     if (results.length === 0) {
       return res.status(403).send('Invalid email')
     }
