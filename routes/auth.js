@@ -2,8 +2,9 @@ var express = require('express');
 var router = express.Router();
 const db = require('../db')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken');
 
-router.post('/register', async function(req, res, next) {
+router.post('/register', async (req, res) => {
   const {email, password} = req.body
   try {
     const [results] = await db.query("SELECT email FROM users")
@@ -20,6 +21,32 @@ router.post('/register', async function(req, res, next) {
     return res.status(500).send('Database query failed');
   }
   res.send('respond with a resource');
+})
+
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const [results] = await db.query('SELECT * FROM users WHERE email = ?', [email])
+    if (results.length === 0) {
+      return res.status(403).send('Invalid email')
+    }
+    const user = results[0]
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(403).send("Invalid password")
+    }
+    const token = jwt.sign(
+      { email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    console.log(token)
+    return res.json({token})
+  } catch (err) {
+    console.log(err)
+    return res.status(500).send('Database query failed')
+  }
 })
 
 module.exports = router;
