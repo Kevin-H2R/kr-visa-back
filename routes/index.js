@@ -4,7 +4,7 @@ const authenticateToken = require('../middleware/authenticate')
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.json({'message': 'YOYOYO'});
 });
 
 router.get('/protected', authenticateToken, (req, res) => {
