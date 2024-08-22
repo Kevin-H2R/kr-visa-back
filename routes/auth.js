@@ -23,12 +23,14 @@ const generateTokens = (user) => {
 
 router.post('/register', async (req, res) => {
   const {email, password} = req.body
+  console.log("email: ", email)
+  console.log("password: ", password)
   try {
     const [results] = await db.query("SELECT email FROM user")
     console.log(results)
     for (let i = 0; i < results.length; ++i) {
       if (results[i].email === email) {
-        return res.status(403).send('Email already taken')
+        return res.status(403).json({success: false, message: 'Email already taken'} )
       }
     }
     const hashed = await bcrypt.hash(password, 10)
@@ -37,7 +39,7 @@ router.post('/register', async (req, res) => {
     console.log(err)
     return res.status(500).send('Database query failed');
   }
-  res.send('respond with a resource');
+  res.json({success: true});
 })
 
 router.post('/login', async (req, res) => {
@@ -45,19 +47,19 @@ router.post('/login', async (req, res) => {
   try {
     const [results] = await db.query('SELECT * FROM user WHERE email = ?', [email])
     if (results.length === 0) {
-      return res.status(403).send('Invalid email')
+      return res.status(403).json({success: false, message: 'Invalid email'})
     }
     const user = results[0]
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      return res.status(403).send("Invalid password")
+      return res.status(403).json({success: false, message: 'Invalid password'})
     }
     const {access_token, refresh_token} = generateTokens(user)
 
     return res.json({access_token, refresh_token})
   } catch (err) {
     console.log(err)
-    return res.status(500).send('Database query failed')
+    return res.status(500).json({success: false, message: 'Database query failed'})
   }
 })
 
