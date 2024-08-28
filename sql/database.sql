@@ -13,7 +13,7 @@ CREATE TABLE user (
 
 CREATE TABLE visa_category (
   id int PRIMARY KEY AUTO_INCREMENT,
-  name varchar(32) NOT NULL,
+  category varchar(32) NOT NULL,
   english_name varchar(128) NOT NULL,
   korean_name varchar(128) NOT NULL
 );
