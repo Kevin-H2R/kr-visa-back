@@ -121,8 +121,8 @@ INSERT INTO visa (subcategory, description, visa_category_id) VALUES
 ("G-1-4", "Involved in a labor arbitration case", (SELECT id FROM visa_category WHERE category = "G-1")),
 ("G-1-5", "Refugee applicants", (SELECT id FROM visa_category WHERE category = "G-1")),
 ("G-1-6", "Humanitarian Status", (SELECT id FROM visa_category WHERE category = "G-1")),
-
 ("H-2-1", "Work and Visit (Family Connection)", (SELECT id FROM visa_category WHERE category = "H-2")),
 ("H-2-2", "Work and Visit (Parents/Spouse of D-2 Student)", (SELECT id FROM visa_category WHERE category = "H-2")),
 ("H-2-5", "Work and Visit (By lottery)", (SELECT id FROM visa_category WHERE category = "H-2")),
-("H-2-7", " Work and Visit (Expired Visa)", (SELECT id FROM visa_category WHERE category = "H-2")),
+("H-2-7", "Work and Visit (Expired Visa)", (SELECT id FROM visa_category WHERE category = "H-2"))
+;
