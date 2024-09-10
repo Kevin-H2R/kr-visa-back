@@ -8,7 +8,10 @@ CREATE TABLE user (
   email varchar(255) NOT NULL,
   password varchar(255) NOT NULL,
   firstname varchar(128),
-  lastname varchar(128)
+  lastname varchar(128),
+  status varchar(28),
+  verification_token varchar(255),
+  verification_expiration datetime,
 );
 
 CREATE TABLE visa_category (
