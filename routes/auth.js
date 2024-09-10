@@ -3,6 +3,7 @@ var router = express.Router();
 const db = require('../db')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken');
+const crypto = require("crypto");
 
 
 const generateTokens = (user) => {
@@ -34,11 +35,35 @@ router.post('/register', async (req, res) => {
       }
     }
     const hashed = await bcrypt.hash(password, 10)
-    db.query('INSERT INTO user (email, password) VALUES (?, ?)', [email, hashed])
+    const uuid = crypto.randomUUID();
+    const expiration = new Date()
+    expiration.setHours(expiration.getHours() + 1)
+    await db.query(
+      'INSERT INTO user (email, password, verification_token, verification_expiration, status) VALUES (?, ?, ?, ?, ?)',
+      [email, hashed, uuid, expiration, 'UNVERIFIED']
+    )
+    // TODO: send verification token
   } catch (err) {
     console.log(err)
     return res.status(500).send('Database query failed');
   }
+  res.json({success: true});
+})
+
+router.get('/verify', async (req, res) => {
+  const token = req.query.token
+  if (!token) {
+    return res.status(403).json({success: false, message: 'Token missing'})
+  }
+  const [results] = await db.query('SELECT * FROM user WHERE verification_token = ?', [token])
+  if (results.length !== 1) {
+    return res.status(403).json({success: false, message: 'Invalid token'})
+  }
+  const user = results[0]
+  if (user.verification_expiration < new Date()) {
+    return res.status(403).json({sucess: false, message: 'Expired token'})
+  }
+  await db.query('UPDATE user SET status = "ACTIVE", verification_token = NULL, verification_expiration = NULL WHERE verification_token = ?', [token])
   res.json({success: true});
 })
 
@@ -50,6 +75,12 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({success: false, message: 'Invalid email'})
     }
     const user = results[0]
+    if (user.status === "UNVERIFIED") {
+      return res.status(403).json({success: false, message: 'User is not verified'})
+    }
+    if (user.status !== "ACTIVE") {
+      return res.status(403).json({success: false, message: 'User is not active'})
+    }
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(403).json({success: false, message: 'Invalid password'})
