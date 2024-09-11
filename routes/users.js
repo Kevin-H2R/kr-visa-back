@@ -8,7 +8,7 @@ router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
-router.get('/visa', authenticateToken, async (req, res, next) => {
+router.get('/visa', authenticateToken, async (req, res) => {
   const [users] = await db.query("SELECT id FROM user where email = ?", req.user.email)
   // TODO handle no result
   const id = users[0].id
